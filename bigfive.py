@@ -4,15 +4,17 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import streamlit as st
 
-# フォント設定（日本語化）
+# フォント設定（Streamlit CloudなどのLinux環境用）
 try:
     import japanize_matplotlib
 except ImportError:
     pass
 
-file_path = r"C:\Python\bigfive\shistumon.txt"
-kaisetsu_path = r"C:\Python\bigfive\kaisetsu.txt"
+# ファイルパス（相対パス）
+file_path = "shistumon.txt"
+kaisetsu_path = "kaisetsu.txt"
 
 factor_pair = {
     "外向性": (1, 6),
@@ -25,27 +27,34 @@ factor_pair = {
 # 逆転項目
 REVERSE_ITEM = [2, 6, 8, 9, 10]
 
+DEFAULT_SHITSUMON = [
+    "1. 活気があり、外向的だと思う",
+    "2. 他人に批判的で、同情心に欠けると思う",
+    "3. しっかりしていて、自分に厳しいと思う",
+    "4. 心配性で、不安になりやすいと思う",
+    "5. 新しいことや複雑なことに興味があると思う",
+    "6. おとなしく、静かだと思う",
+    "7. 他人を思いやり、温かい心を持っていると思う",
+    "8. だらしなく、不注意なところがあると思う",
+    "9. 冷静で、気分が安定していると思う",
+    "10. 独創的で、発想力が豊富だと思う",
+]
+
 
 def load_shitsumon(file_path):
-    if not os.path.exists(file_path):
-        print(f"エラー:ファイルが見つかりません: {file_path}")
-        return None
-
-    shitsumon = []
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            text = line.strip()
-            if text:
-                shitsumon.append(text)
-
-    return shitsumon
+    """質問文をテキストから読み込みます"""
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+            if len(lines) >= 10:
+                return lines[:10]
+    return DEFAULT_SHITSUMON
 
 
 def load_kaisetsu(file_path):
-    """kaisetsu.txt を読み込んでセクションごとの辞書を作成する"""
+    """kaisetsu.txt を読み込んでセクションごとの辞書を作成します"""
     kaisetsu_dict = {}
     if not os.path.exists(file_path):
-        print(f"警告: 解説ファイルが見つかりません: {file_path}")
         return kaisetsu_dict
 
     current_section = None
@@ -55,7 +64,7 @@ def load_kaisetsu(file_path):
             if not text:
                 continue
 
-            # [外向性] や [心理学コラム] などの見出しタグをチェック
+            # [見出し] タグをチェック
             if text.startswith("[") and text.endswith("]"):
                 current_section = text[1:-1]
                 kaisetsu_dict[current_section] = ""
@@ -63,40 +72,6 @@ def load_kaisetsu(file_path):
                 kaisetsu_dict[current_section] += text + "\n"
 
     return kaisetsu_dict
-
-
-def show_instructions():
-    """開始時に入力方法や選択肢の意味を表示する関数"""
-    print("=" * 50)
-    print("    【 Big5 簡易性格診断（10項目） 】")
-    print("=" * 50)
-    print("以下の質問について、今のあなたにどれくらい当てはまるかを")
-    print("【 1 〜 7 】の数字で答えてください。\n")
-    print("  1: 全く当てはまらない")
-    print("  2: 当てはまらない")
-    print("  3: どちらかといえば当てはまらない")
-    print("  4: どちらでもない")
-    print("  5: どちらかといえば当てはまる")
-    print("  6: 当てはまる")
-    print("  7: 非常によく当てはまる")
-    print("=" * 50)
-    print()
-
-
-def answer(q_num, q_text):
-    print("-" * 30)
-    print(f"[質問{q_num}]")
-    print(q_text)
-
-    while True:
-        try:
-            val = int(input("回答(1-7)>>>"))
-            if 1 <= val <= 7:
-                return val
-            else:
-                print("エラー:1〜7で入力してください")
-        except ValueError:
-            print("エラー:半角数字で入力してください")
 
 
 def calculate_score(answers):
@@ -108,123 +83,113 @@ def calculate_score(answers):
     return score
 
 
-def display_result(scores, kaisetsu_data):
-    """診断結果と解説・コラムを表示する関数"""
-    print("\n" + "=" * 50)
-    print("      【 Big5 診断結果 】")
-    print("=" * 50)
-
-    for factor, score in scores.items():
-        bar = "★" * int(round(score))
-        print(f"{factor:6s} : {score:.1f} 点  {bar}")
-
-    print("=" * 50)
-    print("※ スコアは 1.0（低い）〜 7.0（高い）の範囲です。\n")
-
-    # --- 各因子の解説表示 ---
-    if kaisetsu_data:
-        print("\n【 📖 各因子の詳細解説 】")
-        for factor, score in scores.items():
-            print(f"\n🔹 {factor} (あなたのスコア: {score:.1f}点)")
-            if factor in kaisetsu_data:
-                print(kaisetsu_data[factor].strip())
-            else:
-                print("  ※ この因子の解説はありません。")
-
-        # --- 心理学コラムの表示 ---
-        if "心理学コラム" in kaisetsu_data:
-            print("\n" + "-" * 50)
-            print("🔬 心理学コラム")
-            print("-" * 50)
-            print(kaisetsu_data["心理学コラム"].strip())
-
-        # --- 参考文献の表示 ---
-        if "参考文献" in kaisetsu_data:
-            print("\n" + "-" * 50)
-            print("📚 参考文献・学術的根拠")
-            print("-" * 50)
-            print(kaisetsu_data["参考文献"].strip())
-            print("-" * 50)
-
-
 def plot_radar_chart(scores):
-    """ペンタゴン（レーダーチャート）を表示する関数"""
+    """レーダーチャートを描画します"""
     df = pd.Series(scores)
     labels = list(df.index)
     values = list(df.values)
 
-    # グラフを閉じるために先頭要素を末尾に追加
     values += values[:1]
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
 
-    # 描画の準備
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+    ax.set_theta_offset(np.pi / 2)
+    ax.set_theta_direction(-1)
+    ax.set_rlim(1, 7)
 
-    ax.set_theta_offset(np.pi / 2)  # 外向性を真上にする
-    ax.set_theta_direction(-1)  # 時計回り
-    ax.set_rlim(1, 7)  # 範囲は 1〜7
-
-    plt.xticks(angles[:-1], labels, size=12)
-
-    # データ描画
-    ax.plot(angles, values, color="skyblue", linewidth=2, linestyle="solid")
+    plt.xticks(angles[:-1], labels, size=11)
+    ax.plot(angles, values, color="skyblue", linewidth=2)
     ax.fill(angles, values, color="skyblue", alpha=0.4)
+    plt.title("【 Big5 性格診断結果 】", size=14, color="navy", y=1.1)
 
-    plt.title("【 Big5 性格診断レーダーチャート 】", size=15, color="navy", y=1.1)
-    plt.show()
-
-
-def save_to_csv(answers, scores, output_file=r"C:\Python\bigfive\results.csv"):
-    """回答と計算結果をCSVファイルに追記保存する関数"""
-    file_exists = os.path.exists(output_file)
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # ヘッダー列（日時, Q1〜Q10, 外向性〜開放性）
-    headers = ["datetime"] + [f"Q{i}" for i in range(1, 11)] + list(scores.keys())
-
-    # 書き込むデータ行
-    row = [now] + [answers[i] for i in range(1, 11)] + list(scores.values())
-
-    # UTF-8 (BOM付き) で保存してExcelの文字化けを防ぐ
-    with open(output_file, "a", newline="", encoding="utf-8-sig") as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(headers)  # 初回のみヘッダー書き込み
-        writer.writerow(row)
-
-    print(f"\n結果が保存されました: {output_file}\n")
+    return fig
 
 
 def main():
-    """プログラム全体を順番に動かすメイン処理"""
-    # 1. 質問ファイル・解説ファイルの読み込み
-    shitsumon = load_shitsumon(file_path)
-    if not shitsumon or len(shitsumon) < 10:
-        print("エラー: 質問が10項目揃っていません。ファイルを確認してください。")
-        return
+    st.title("🧩 Big5 簡易性格診断（10項目）")
+    st.write(
+        "以下の10個の質問について、今のあなたにどれくらい当てはまるかをスライダーでお答えください。"
+    )
 
+    # データの読み込み
+    shitsumon_list = load_shitsumon(file_path)
     kaisetsu_data = load_kaisetsu(kaisetsu_path)
 
-    # 2. 案内の表示
-    show_instructions()
+    # --- 【テスト前に表示】 Big5についての説明 ---
+    if "Big5とは" in kaisetsu_data:
+        with st.expander("💡 そもそも「Big5」とは？（解説を開く）"):
+            st.write(kaisetsu_data["Big5とは"])
 
-    # 3. 10個の質問に順番に回答
+    # 選択肢の目安
+    with st.expander("💡 選択肢の目安（1〜7）を見る"):
+        st.write("""
+        * **1**: 全く当てはまらない
+        * **2**: 当てはまらない
+        * **3**: どちらかといえば当てはまらない
+        * **4**: どちらでもない
+        * **5**: どちらかといえば当てはまる
+        * **6**: 当てはまる
+        * **7**: 非常によく当てはまる
+        """)
+
     answers = {}
+
+    st.write("---")
+    st.subheader("📝 質問コーナー")
+
+    # スライダー入力
     for i in range(1, 11):
-        answers[i] = answer(i, shitsumon[i - 1])
+        answers[i] = st.slider(
+            label=f"Q{i}. {shitsumon_list[i-1]}",
+            min_value=1,
+            max_value=7,
+            value=4,
+            key=f"q_{i}",
+        )
 
-    # 4. スコア計算（逆転項目も自動処理）
-    scores = calculate_score(answers)
+    st.write("---")
 
-    # 5. ターミナルに結果・解説表示
-    display_result(scores, kaisetsu_data)
+    # 診断ボタンを押した後の処理
+    if st.button("📊 診断結果を表示する", type="primary", use_container_width=True):
+        scores = calculate_score(answers)
 
-    # 6. CSVファイルへ自動保存
-    save_to_csv(answers, scores)
+        st.success("診断が完了しました。")
+        st.subheader("【 5因子スコア 】")
 
-    # 7. ペンタゴングラフ（レーダーチャート）表示
-    plot_radar_chart(scores)
+        # スコア表示
+        cols = st.columns(5)
+        for idx, (factor, score) in enumerate(scores.items()):
+            cols[idx].metric(label=factor, value=f"{score:.1f}点")
+
+        # グラフ描画
+        st.write("---")
+        fig = plot_radar_chart(scores)
+        st.pyplot(fig)
+
+        # --- 【テスト後に表示】 各因子の詳細解説 ---
+        st.write("---")
+        st.subheader("📖 各因子の解説")
+
+        for factor, score in scores.items():
+            with st.expander(f"🔹 {factor} (あなたのスコア: {score:.1f}点) の解説"):
+                if factor in kaisetsu_data:
+                    st.write(kaisetsu_data[factor])
+                else:
+                    st.write("※ この因子の解説テキストが見つかりません。")
+
+        # --- 【テスト後に表示】 心理学コラム ＆ 参考文献 ---
+        st.write("---")
+
+        if "心理学コラム" in kaisetsu_data:
+            with st.expander(
+                "🔬 心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"
+            ):
+                st.write(kaisetsu_data["心理学コラム"])
+
+        if "参考文献" in kaisetsu_data:
+            with st.expander("📚 参考文献・学術的根拠"):
+                st.write(kaisetsu_data["参考文献"])
 
 
 if __name__ == "__main__":
