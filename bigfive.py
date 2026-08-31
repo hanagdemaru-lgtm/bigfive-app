@@ -119,7 +119,7 @@ def plot_radar_chart(scores):
 
 
 def main():
-    st.title("🧩 Big5 簡易性格診断（10項目）")
+    st.title("Big5 簡易性格診断（10項目）")
     st.write(
         "以下の10個の質問について、今のあなたにどれくらい当てはまるかをスライダーでお答えください。"
     )
@@ -130,11 +130,11 @@ def main():
 
     # --- 【テスト前に表示】 Big5についての説明 ---
     if "Big5とは" in kaisetsu_data:
-        with st.expander("💡 そもそも「Big5」とは？（解説を開く）"):
+        with st.expander("そもそも「Big5」とは？（解説を開く）"):
             st.write(kaisetsu_data["Big5とは"])
 
     # 選択肢の目安
-    with st.expander("💡 選択肢の目安（1〜7）を見る"):
+    with st.expander(" 選択肢の目安（1〜7）を見る"):
         st.write("""
         * **1**: 全く当てはまらない
         * **2**: 当てはまらない
@@ -163,7 +163,7 @@ def main():
     st.write("---")
 
     # 診断ボタンを押した後の処理
-    if st.button("📊 診断結果を表示する", type="primary", use_container_width=True):
+    if st.button("診断結果を表示する", type="primary", use_container_width=True):
         scores = calculate_score(answers)
 
         st.success("診断が完了しました。")
@@ -195,12 +195,12 @@ def main():
 
         if "心理学コラム" in kaisetsu_data:
             with st.expander(
-                "🔬 心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"
+                "心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"
             ):
                 st.write(kaisetsu_data["心理学コラム"])
 
         if "参考文献" in kaisetsu_data:
-            with st.expander("📚 参考文献・学術的根拠"):
+            with st.expander("参考文献・学術的根拠"):
                 st.write(kaisetsu_data["参考文献"])
 
 
