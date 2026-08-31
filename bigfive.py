@@ -77,11 +77,10 @@ def calculate_score(answers):
 
 
 def plot_radar_chart(scores):
-    """Plotlyを使って文字化けしないレーダーチャートを描画します"""
+    """Plotlyを使ってレーダーチャートを描画します"""
     categories = list(scores.keys())
     values = list(scores.values())
 
-    # レーダーチャートを閉じるために先頭の要素を末尾に追記
     categories_closed = categories + [categories[0]]
     values_closed = values + [values[0]]
 
@@ -108,10 +107,10 @@ def plot_radar_chart(scores):
         ),
         showlegend=False,
         title=dict(
-            text="【 Big5 性格診断結果 】",
+            text="<b>【 Big5 性格診断結果 】</b>",
             x=0.5,
             xanchor="center",
-            font=dict(size=18, color="navy"),
+            font=dict(size=18, color="white"),
         ),
         margin=dict(l=40, r=40, t=60, b=40),
     )
