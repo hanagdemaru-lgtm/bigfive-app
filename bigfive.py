@@ -148,7 +148,7 @@ def main():
     answers = {}
 
     st.write("---")
-    st.subheader("📝 質問コーナー")
+    st.subheader("質問項目")
 
     # スライダー入力
     for i in range(1, 11):
