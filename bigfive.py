@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-plt.rcParams["font.family"] = "MS Gothic"
+# フォント設定（日本語化）
+try:
+    import japanize_matplotlib
+except ImportError:
+    pass
 
 file_path = r"C:\Python\bigfive\shistumon.txt"
 kaisetsu_path = r"C:\Python\bigfive\kaisetsu.txt"
