@@ -20,9 +20,12 @@ if not os.path.exists(font_path):
     except Exception:
         pass
 
+# フォントプロパティオブジェクトの作成
+jp_font = None
 if os.path.exists(font_path):
     fm.fontManager.addfont(font_path)
     plt.rcParams["font.family"] = "IPAexGothic"
+    jp_font = fm.FontProperties(fname=font_path)
 else:
     try:
         import japanize_matplotlib
@@ -115,10 +118,17 @@ def plot_radar_chart(scores):
     ax.set_theta_direction(-1)
     ax.set_rlim(1, 7)
 
-    plt.xticks(angles[:-1], labels, size=11)
+    # 軸ラベルとタイトルに日本語フォントを直接適用
+    ax.set_xticks(angles[:-1])
+    if jp_font:
+        ax.set_xticklabels(labels, fontproperties=jp_font, fontsize=11)
+        plt.title("【 Big5 性格診断結果 】", fontproperties=jp_font, size=14, color="navy", y=1.1)
+    else:
+        ax.set_xticklabels(labels, size=11)
+        plt.title("【 Big5 性格診断結果 】", size=14, color="navy", y=1.1)
+
     ax.plot(angles, values, color="skyblue", linewidth=2)
     ax.fill(angles, values, color="skyblue", alpha=0.4)
-    plt.title("【 Big5 性格診断結果 】", size=14, color="navy", y=1.1)
 
     return fig
 
