@@ -7,10 +7,27 @@ import pandas as pd
 import streamlit as st
 
 # フォント設定（Streamlit CloudなどのLinux環境用）
-try:
-    import japanize_matplotlib
-except ImportError:
-    pass
+import matplotlib.font_manager as fm
+import urllib.request
+
+# 日本語フォント（IPAexゴシック）を自動ダウンロードして設定
+font_url = "https://github.com/google/fonts/raw/main/ofl/ipaexgothic/IPAexGothic.ttf"
+font_path = "IPAexGothic.ttf"
+
+if not os.path.exists(font_path):
+    try:
+        urllib.request.urlretrieve(font_url, font_path)
+    except Exception:
+        pass
+
+if os.path.exists(font_path):
+    fm.fontManager.addfont(font_path)
+    plt.rcParams["font.family"] = "IPAexGothic"
+else:
+    try:
+        import japanize_matplotlib
+    except ImportError:
+        pass
 
 # ファイルパス（相対パス）
 file_path = "shistumon.txt"
