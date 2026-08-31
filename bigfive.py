@@ -1,36 +1,9 @@
 import csv
 from datetime import datetime
 import os
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
-
-# フォント設定（Streamlit CloudなどのLinux環境用）
-import matplotlib.font_manager as fm
-import urllib.request
-
-# 日本語フォント（IPAexゴシック）を自動ダウンロードして設定
-font_url = "https://github.com/google/fonts/raw/main/ofl/ipaexgothic/IPAexGothic.ttf"
-font_path = "IPAexGothic.ttf"
-
-if not os.path.exists(font_path):
-    try:
-        urllib.request.urlretrieve(font_url, font_path)
-    except Exception:
-        pass
-
-# フォントプロパティオブジェクトの作成
-jp_font = None
-if os.path.exists(font_path):
-    fm.fontManager.addfont(font_path)
-    plt.rcParams["font.family"] = "IPAexGothic"
-    jp_font = fm.FontProperties(fname=font_path)
-else:
-    try:
-        import japanize_matplotlib
-    except ImportError:
-        pass
 
 # ファイルパス（相対パス）
 file_path = "shistumon.txt"
@@ -104,31 +77,44 @@ def calculate_score(answers):
 
 
 def plot_radar_chart(scores):
-    """レーダーチャートを描画します"""
-    df = pd.Series(scores)
-    labels = list(df.index)
-    values = list(df.values)
+    """Plotlyを使って文字化けしないレーダーチャートを描画します"""
+    categories = list(scores.keys())
+    values = list(scores.values())
 
-    values += values[:1]
-    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
-    angles += angles[:1]
+    # レーダーチャートを閉じるために先頭の要素を末尾に追記
+    categories_closed = categories + [categories[0]]
+    values_closed = values + [values[0]]
 
-    fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_rlim(1, 7)
+    fig = go.Figure()
 
-    # 軸ラベルとタイトルに日本語フォントを直接適用
-    ax.set_xticks(angles[:-1])
-    if jp_font:
-        ax.set_xticklabels(labels, fontproperties=jp_font, fontsize=11)
-        plt.title("【 Big5 性格診断結果 】", fontproperties=jp_font, size=14, color="navy", y=1.1)
-    else:
-        ax.set_xticklabels(labels, size=11)
-        plt.title("【 Big5 性格診断結果 】", size=14, color="navy", y=1.1)
+    fig.add_trace(
+        go.Scatterpolar(
+            r=values_closed,
+            theta=categories_closed,
+            fill="toself",
+            name="診断スコア",
+            line_color="#3366CC",
+            fillcolor="rgba(51, 102, 204, 0.3)",
+        )
+    )
 
-    ax.plot(angles, values, color="skyblue", linewidth=2)
-    ax.fill(angles, values, color="skyblue", alpha=0.4)
+    fig.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[1, 7],
+                dtick=1,
+            )
+        ),
+        showlegend=False,
+        title=dict(
+            text="【 Big5 性格診断結果 】",
+            x=0.5,
+            xanchor="center",
+            font=dict(size=18, color="navy"),
+        ),
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
 
     return fig
 
@@ -189,10 +175,10 @@ def main():
         for idx, (factor, score) in enumerate(scores.items()):
             cols[idx].metric(label=factor, value=f"{score:.1f}点")
 
-        # グラフ描画
+        # グラフ描画 (Plotly)
         st.write("---")
         fig = plot_radar_chart(scores)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
         # --- 【テスト後に表示】 各因子の詳細解説 ---
         st.write("---")
