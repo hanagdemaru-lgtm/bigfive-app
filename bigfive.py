@@ -137,17 +137,17 @@ def plot_radar_chart(scores):
 
 
 def main():
-    st.title("🧩 Big5 簡易性格診断（10項目）")
+    st.title("Big5 簡易性格診断（10項目）")
     st.write("以下の10個の質問について、今のあなたにどれくらい当てはまるかをスライダーでお答えください。")
 
     shitsumon_list = load_shitsumon(file_path)
     kaisetsu_data = load_kaisetsu(kaisetsu_path)
 
     if "Big5とは" in kaisetsu_data:
-        with st.expander("💡 そもそも「Big5」とは？（解説を開く）"):
+        with st.expander("そもそも「Big5」とは？（解説を開く）"):
             st.write(kaisetsu_data["Big5とは"])
 
-    with st.expander("💡 選択肢の目安（1〜7）を見る"):
+    with st.expander("選択肢の目安（1〜7）を見る"):
         st.write("""
         * **1**: 全く当てはまらない
         * **2**: 当てはまらない
@@ -161,7 +161,7 @@ def main():
     answers = {}
 
     st.write("---")
-    st.subheader("📝 質問コーナー")
+    st.subheader("質問項目")
 
     for i in range(1, 11):
         answers[i] = st.slider(
@@ -174,7 +174,7 @@ def main():
 
     st.write("---")
 
-    if st.button("📊 診断結果を表示する", type="primary", use_container_width=True):
+    if st.button("診断結果を表示する", type="primary", use_container_width=True):
         scores = calculate_score(answers)
 
         # データベースに保存
@@ -211,7 +211,7 @@ def main():
                 st.write(kaisetsu_data["心理学コラム"])
 
         if "参考文献" in kaisetsu_data:
-            with st.expander("📚 参考文献・学術的根拠"):
+            with st.expander("参考文献・学術的根拠"):
                 st.write(kaisetsu_data["参考文献"])
 
     # --- HAD用データ出力コーナー（画面最下部） ---
@@ -225,7 +225,7 @@ def main():
                 if not df.empty:
                     csv_data = df.to_csv(index=False).encode("utf-8-sig")
                     st.download_button(
-                        label="📥 HAD用CSVをダウンロード",
+                        label="HAD用CSVをダウンロード",
                         data=csv_data,
                         file_name="bigfive_had_data.csv",
                         mime="text/csv",
