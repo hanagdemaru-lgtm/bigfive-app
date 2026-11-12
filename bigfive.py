@@ -16,7 +16,7 @@ try:
 except Exception:
     supabase = None
 
-# ファイルパス（相対パス）※ご指定のファイル名に変更
+# ファイルパス（相対パス）
 file_path = "bigfive_shitumon.txt"
 kaisetsu_path = "kaisetsu.txt"
 
@@ -217,35 +217,13 @@ def main():
         st.write("---")
 
         if "心理学コラム" in kaisetsu_data:
-            with st.expander("心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"):
+            with st.expander("心理学コラム：なぜ Big5 はクオリティの高い性格診断と呼ばれるのか？"):
                 st.write(kaisetsu_data["心理学コラム"])
 
         if "参考文献" in kaisetsu_data:
             with st.expander("参考文献・学術的根拠"):
                 st.write(kaisetsu_data["参考文献"])
----
-    # --- HAD用データ出力コーナー（画面最下部） ---
-    st.write("---")
-    with st.expander("🛠️ 管理者メニュー（HAD用データダウンロード）"):
-        if supabase:
-            if st.button("最新データを取得する"):
-                response = supabase.table("results").select("*").execute()
-                df = pd.DataFrame(response.data)
 
-                if not df.empty:
-                    csv_data = df.to_csv(index=False).encode("utf-8-sig")
-                    st.download_button(
-                        label="HAD用CSVをダウンロード",
-                        data=csv_data,
-                        file_name="bigfive_29_had_data.csv",
-                        mime="text/csv",
-                    )
-                    st.dataframe(df.head())
-                else:
-                    st.info("まだ保存されたデータがありません。")
-        else:
-            st.warning("DB接続設定が完了していません。Secretsを確認してください。")
----
 
 if __name__ == "__main__":
     main()
