@@ -16,31 +16,30 @@ try:
 except Exception:
     supabase = None
 
-# ファイルパス（相対パス）
-file_path = "shistumon.txt"
+# ファイルパス（相対パス）※ご指定のファイル名に変更
+file_path = "bigfive_shitumon.txt"
 kaisetsu_path = "kaisetsu.txt"
 
-factor_pair = {
-    "外向性": (1, 6),
-    "協調性": (2, 7),
-    "勤勉性": (3, 8),
-    "神経質傾向": (4, 9),
-    "開放性": (5, 10),
+# --- Big5 因子マッピング (29問用) ---
+BIG5_FACTORS = {
+    "外向性": [1, 2, 3, 4, 5],
+    "勤勉性": [6, 7, 8, 9, 10, 11, 12],
+    "神経質傾向": [13, 14, 15, 16, 17],
+    "開放性": [18, 19, 20, 21, 22, 23],
+    "調和性": [24, 25, 26, 27, 28, 29],
 }
 
-REVERSE_ITEM = [2, 6, 8, 9, 10]
+# --- 逆転項目の指定 (1から始まる設問番号) ---
+REVERSE_ITEM = [1, 6, 7, 8, 9, 11, 20, 24, 25, 28]
 
+# フォールバック用のデフォルト29問
 DEFAULT_SHITSUMON = [
-    "1. 活気があり、外向的だと思う",
-    "2. 他人に批判的で、同情心に欠けると思う",
-    "3. しっかりしていて、自分に厳しいと思う",
-    "4. 心配性で、不安になりやすいと思う",
-    "5. 新しいことや複雑なことに興味があると思う",
-    "6. おとなしく、静かだと思う",
-    "7. 他人を思いやり、温かい心を持っていると思う",
-    "8. だらしなく、不注意なところがあると思う",
-    "9. 冷静で、気分が安定していると思う",
-    "10. 独創的で、発想力が豊富だと思う",
+    "無口な", "社交的", "話し好き", "外交的", "陽気な",
+    "いい加減な", "ルーズな", "成り行き任せな", "怠惰な", "計画性のある",
+    "軽率な", "几帳面な", "不安になりやすい", "心配性", "弱気になる",
+    "緊張しやすい", "憂鬱な", "多才の", "進歩的", "独裁的な",
+    "頭の回転がはやい", "興味のひろい", "好奇心が強い", "短期", "怒りっぽい",
+    "温和な", "寛大な", "自己中心的", "親切な"
 ]
 
 
@@ -48,8 +47,8 @@ def load_shitsumon(file_path):
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             lines = [line.strip() for line in f if line.strip()]
-            if len(lines) >= 10:
-                return lines[:10]
+            if len(lines) >= 29:
+                return lines[:29]
     return DEFAULT_SHITSUMON
 
 
@@ -73,28 +72,39 @@ def load_kaisetsu(file_path):
 
 
 def calculate_score(answers):
-    score = {}
-    for factor, (q1, q2) in factor_pair.items():
-        val1 = (8 - answers[q1]) if q1 in REVERSE_ITEM else answers[q1]
-        val2 = (8 - answers[q2]) if q2 in REVERSE_ITEM else answers[q2]
-        score[factor] = (val1 + val2) / 2
-    return score
+    processed = {}
+    # 逆転項目の処理 (7件法: 8 - 値)
+    for i in range(1, 30):
+        val = answers[i]
+        processed[i] = (8 - val) if i in REVERSE_ITEM else val
+
+    factor_scores = {}
+    for factor, q_list in BIG5_FACTORS.items():
+        vals = [processed[q] for q in q_list]
+        factor_scores[factor] = sum(vals) / len(vals)
+        
+    return factor_scores
 
 
 def save_to_supabase(answers, scores):
-    """回答と計算スコアをSupabaseに保存します"""
+    """29問の回答と各因子スコアをSupabaseに保存します"""
     if supabase is None:
         return False
 
-    data = {
-        "q1": answers[1], "q2": answers[2], "q3": answers[3], "q4": answers[4], "q5": answers[5],
-        "q6": answers[6], "q7": answers[7], "q8": answers[8], "q9": answers[9], "q10": answers[10],
+    data = {}
+    # q1 〜 q29 を動的に格納
+    for i in range(1, 30):
+        data[f"q{i}"] = answers[i]
+
+    # 各因子スコアを格納
+    data.update({
         "factor_e": scores["外向性"],
-        "factor_a": scores["協調性"],
         "factor_c": scores["勤勉性"],
         "factor_n": scores["神経質傾向"],
         "factor_o": scores["開放性"],
-    }
+        "factor_a": scores["調和性"],
+    })
+
     try:
         supabase.table("results").insert(data).execute()
         return True
@@ -137,8 +147,8 @@ def plot_radar_chart(scores):
 
 
 def main():
-    st.title("Big5 簡易性格診断（10項目）")
-    st.write("以下の10個の質問について、今のあなたにどれくらい当てはまるかをスライダーでお答えください。")
+    st.title("Big5 本格性格診断（29項目）")
+    st.write("以下の29個の項目について、あなた自身にどれくらい当てはまるかをそれぞれスライダーでお答えください。")
 
     shitsumon_list = load_shitsumon(file_path)
     kaisetsu_data = load_kaisetsu(kaisetsu_path)
@@ -163,7 +173,7 @@ def main():
     st.write("---")
     st.subheader("質問項目")
 
-    for i in range(1, 11):
+    for i in range(1, 30):
         answers[i] = st.slider(
             label=f"Q{i}. {shitsumon_list[i-1]}",
             min_value=1,
@@ -180,15 +190,15 @@ def main():
         # データベースに保存
         saved = save_to_supabase(answers, scores)
         if saved:
-            st.success("診断が完了し、回答データが保存されました。")
+            st.success("診断が完了し、回答データがSupabaseに保存されました。")
         else:
-            st.success("診断が完了しました。")
+            st.warning("診断が完了しました（DB保存はスキップまたは失敗しました）。")
 
         st.subheader("【 5因子スコア 】")
 
         cols = st.columns(5)
         for idx, (factor, score) in enumerate(scores.items()):
-            cols[idx].metric(label=factor, value=f"{score:.1f}点")
+            cols[idx].metric(label=factor, value=f"{score:.2f}点")
 
         st.write("---")
         fig = plot_radar_chart(scores)
@@ -198,7 +208,7 @@ def main():
         st.subheader("📖 各因子の解説")
 
         for factor, score in scores.items():
-            with st.expander(f"🔹 {factor} (あなたのスコア: {score:.1f}点) の解説"):
+            with st.expander(f"🔹 {factor} (あなたのスコア: {score:.2f}点) の解説"):
                 if factor in kaisetsu_data:
                     st.write(kaisetsu_data[factor])
                 else:
@@ -227,7 +237,7 @@ def main():
                     st.download_button(
                         label="HAD用CSVをダウンロード",
                         data=csv_data,
-                        file_name="bigfive_had_data.csv",
+                        file_name="bigfive_29_had_data.csv",
                         mime="text/csv",
                     )
                     st.dataframe(df.head())
