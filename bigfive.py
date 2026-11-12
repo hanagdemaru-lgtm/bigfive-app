@@ -205,10 +205,10 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
 
         st.write("---")
-        st.subheader("📖 各因子の解説")
+        st.subheader("各因子の解説")
 
         for factor, score in scores.items():
-            with st.expander(f"🔹 {factor} (あなたのスコア: {score:.2f}点) の解説"):
+            with st.expander(f"🔹 {factor} の解説"):
                 if factor in kaisetsu_data:
                     st.write(kaisetsu_data[factor])
                 else:
@@ -217,13 +217,13 @@ def main():
         st.write("---")
 
         if "心理学コラム" in kaisetsu_data:
-            with st.expander("🔬 心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"):
+            with st.expander("心理学コラム：なぜ Big5 は「本物の性格診断」と呼ばれるのか？"):
                 st.write(kaisetsu_data["心理学コラム"])
 
         if "参考文献" in kaisetsu_data:
             with st.expander("参考文献・学術的根拠"):
                 st.write(kaisetsu_data["参考文献"])
-
+---
     # --- HAD用データ出力コーナー（画面最下部） ---
     st.write("---")
     with st.expander("🛠️ 管理者メニュー（HAD用データダウンロード）"):
@@ -245,7 +245,7 @@ def main():
                     st.info("まだ保存されたデータがありません。")
         else:
             st.warning("DB接続設定が完了していません。Secretsを確認してください。")
-
+---
 
 if __name__ == "__main__":
     main()
